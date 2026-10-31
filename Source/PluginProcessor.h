@@ -56,6 +56,25 @@ public:
 
     float bandParam (int band, int p) const { return bandPtr[(size_t) band][(size_t) p]->load(); }
 
+    // internal sidechain: which frequency range drives band b's detector
+    // returns the trigger band index (b itself, another band) or -1 for the free range
+    int detectorRange (int b, float& lo, float& hi, int& loOrd, int& hiOrd) const
+    {
+        const int t = juce::jlimit (0, 7, (int) bandParam (b, SMB::Trig));
+        int src = b;
+        if (t >= 1 && t <= SMB::kNumBands && t - 1 != b && bandParam (t - 1, SMB::Active) > 0.5f) src = t - 1;
+        loOrd = SMB::slopeToOrder ((int) bandParam (src, SMB::LoSlope));
+        hiOrd = SMB::slopeToOrder ((int) bandParam (src, SMB::HiSlope));
+        if (t == 7)
+        {
+            lo = bandParam (b, SMB::FLo); hi = bandParam (b, SMB::FHi);
+            if (lo > hi) std::swap (lo, hi);
+            return -1;
+        }
+        lo = bandParam (src, SMB::Lo); hi = bandParam (src, SMB::Hi);
+        return src;
+    }
+
 private:
     void timerCallback() override;
     void processChunk (float* const* io, int nCh, const float* const* sc, bool hasSC, int n);

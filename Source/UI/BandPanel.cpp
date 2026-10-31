@@ -35,7 +35,7 @@ BandPanel::BandPanel (SilverMBAudioProcessor& p) : proc (p)
     emptyLbl.setFont (juce::FontOptions (14.0f));
     addAndMakeVisible (emptyLbl);
 
-    expertLbl.setText ("EXPERT  -  Sidechain / Detector", juce::dontSendNotification);
+    expertLbl.setText ("EXPERT  -  Sidechain", juce::dontSendNotification);
     expertLbl.setFont (juce::FontOptions (11.5f, juce::Font::bold));
     expertLbl.setColour (juce::Label::textColourId, Pal::navy2);
     addAndMakeVisible (expertLbl);
@@ -48,7 +48,7 @@ BandPanel::BandPanel (SilverMBAudioProcessor& p) : proc (p)
     compBtn.onClick = [this] { setParam (Mode, 0.0f); };
     expBtn.onClick  = [this] { setParam (Mode, 1.0f); };
 
-    for (auto* b : { &solo, &mute, &byp, &freeBtn, &extBtn, &audBtn })
+    for (auto* b : { &solo, &mute, &byp, &extBtn, &audBtn })
     {
         b->setClickingTogglesState (true);
         addAndMakeVisible (b);
@@ -59,7 +59,13 @@ BandPanel::BandPanel (SilverMBAudioProcessor& p) : proc (p)
     solo.setTooltip ("Solo da banda");
     mute.setTooltip ("Mute da banda");
     del.setTooltip ("Excluir banda");
-    freeBtn.setTooltip ("Detector em faixa livre (Free) em vez da propria banda");
+    trigBox.addItemList ({ juce::CharPointer_UTF8 ("Pr\xc3\xb3pria banda"), "Banda 1", "Banda 2", "Banda 3", "Banda 4", "Banda 5", "Banda 6", "Faixa livre" }, 1);
+    trigBox.setTooltip (juce::CharPointer_UTF8 ("Sidechain interno: qual faixa de frequ\xc3\xaancia dispara o compressor desta banda"));
+    addAndMakeVisible (trigBox);
+    trigLbl.setText ("TRIGGER (SC interno)", juce::dontSendNotification);
+    trigLbl.setFont (juce::FontOptions (11.0f, juce::Font::bold));
+    trigLbl.setColour (juce::Label::textColourId, Pal::navy);
+    addAndMakeVisible (trigLbl);
     extBtn.setTooltip ("Usar o sidechain externo (canais 3/4 no REAPER)");
     audBtn.setTooltip ("Ouvir o sinal do detector");
     addAndMakeVisible (del);
@@ -89,7 +95,7 @@ void BandPanel::setBand (int b)
     auto& s = proc.apvts;
 
     loAtt.reset(); hiAtt.reset(); loSAtt.reset(); hiSAtt.reset(); stAtt.reset();
-    soloAtt.reset(); muteAtt.reset(); bypAtt.reset(); freeAtt.reset(); extAtt.reset(); audAtt.reset();
+    soloAtt.reset(); muteAtt.reset(); bypAtt.reset(); extAtt.reset(); audAtt.reset(); trigAtt.reset();
 
     if (b >= 0)
     {
@@ -112,7 +118,7 @@ void BandPanel::setBand (int b)
         soloAtt = std::make_unique<BA> (s, bandID (b, Solo), solo);
         muteAtt = std::make_unique<BA> (s, bandID (b, Mute), mute);
         bypAtt  = std::make_unique<BA> (s, bandID (b, Bypass), byp);
-        freeAtt = std::make_unique<BA> (s, bandID (b, Free), freeBtn);
+        trigAtt = std::make_unique<CA> (s, bandID (b, Trig), trigBox);
         extAtt  = std::make_unique<BA> (s, bandID (b, Ext), extBtn);
         audAtt  = std::make_unique<BA> (s, bandID (b, Audition), audBtn);
 
@@ -135,7 +141,7 @@ void BandPanel::updateVisibility()
              &loFreq, &hiFreq, &loSlope, &hiSlope, &stMode, &compBtn, &expBtn, &solo, &mute, &byp, &del,
              &title, &loLbl, &hiLbl })
         c->setVisible (has);
-    for (juce::Component* c : std::initializer_list<juce::Component*> { &fLo, &fHi, &freeBtn, &extBtn, &audBtn, &expertLbl })
+    for (juce::Component* c : std::initializer_list<juce::Component*> { &fLo, &fHi, &trigBox, &trigLbl, &extBtn, &audBtn, &expertLbl })
         c->setVisible (has && expert);
     emptyLbl.setVisible (! has);
 }
@@ -152,8 +158,11 @@ void BandPanel::timerCallback()
     thresh.slider.getProperties().set ("meter", juce::jlimit (0.0, 1.0, (lvl + 60.0) / 60.0));
     thresh.slider.repaint();
 
-    const bool free = proc.bandParam (band, Free) > 0.5f;
-    fLo.setEnabled (free); fHi.setEnabled (free);
+    const int trig = (int) proc.bandParam (band, Trig);
+    fLo.setEnabled (trig == 7); fHi.setEnabled (trig == 7);
+    // grey out bands that cannot be a trigger (inactive or this band itself)
+    for (int i = 1; i <= kNumBands; ++i)
+        trigBox.setItemEnabled (i + 1, i - 1 != band && proc.bandParam (i - 1, Active) > 0.5f);
     extBtn.setButtonText (proc.sidechainConnected.load() ? "Ext SC" : "Ext SC (--)");
 }
 
@@ -199,9 +208,10 @@ void BandPanel::resized()
     if (expert)
     {
         auto ex = r.removeFromBottom (76);
-        expertLbl.setBounds (ex.removeFromLeft (220).withTrimmedTop (4).removeFromTop (20));
-        auto col = ex.removeFromLeft (110).reduced (4, 10);
-        freeBtn.setBounds (col.removeFromTop (26));
+        expertLbl.setBounds (ex.removeFromLeft (190).withTrimmedTop (4).removeFromTop (20));
+        auto col = ex.removeFromLeft (150).reduced (4, 6);
+        trigLbl.setBounds (col.removeFromTop (16));
+        trigBox.setBounds (col.removeFromTop (26));
         fLo.setBounds (ex.removeFromLeft (90));
         fHi.setBounds (ex.removeFromLeft (90));
         ex.removeFromLeft (16);

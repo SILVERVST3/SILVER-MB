@@ -15,7 +15,7 @@ enum BP
     Active, Lo, Hi, LoSlope, HiSlope,
     Thresh, Range, Ratio, Knee, Attack, Release, LA, Gain,
     Mode, Link, StMode, Solo, Mute, Bypass,
-    Free, FLo, FHi, Ext, Audition,
+    Trig, FLo, FHi, Ext, Audition,
     NumBP
 };
 
@@ -24,7 +24,7 @@ inline const char* bpName (int p)
     static const char* n[] = { "active", "lo", "hi", "loSlope", "hiSlope",
                                "thresh", "range", "ratio", "knee", "attack", "release", "la", "gain",
                                "mode", "link", "stMode", "solo", "mute", "bypass",
-                               "free", "fLo", "fHi", "ext", "audition" };
+                               "trig", "fLo", "fHi", "ext", "audition" };
     return n[p];
 }
 

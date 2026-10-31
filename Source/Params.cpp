@@ -111,7 +111,8 @@ AudioProcessorValueTreeState::ParameterLayout createLayout()
         layout.add (std::make_unique<APB> (ParameterID { bandID (b, Solo), 1 },   pre + "Solo",   false));
         layout.add (std::make_unique<APB> (ParameterID { bandID (b, Mute), 1 },   pre + "Mute",   false));
         layout.add (std::make_unique<APB> (ParameterID { bandID (b, Bypass), 1 }, pre + "Bypass", false));
-        layout.add (std::make_unique<APB> (ParameterID { bandID (b, Free), 1 },   pre + "Free Detection", false));
+        layout.add (std::make_unique<APC> (ParameterID { bandID (b, Trig), 1 }, pre + "Trigger",
+                                           StringArray { "Self", "Band 1", "Band 2", "Band 3", "Band 4", "Band 5", "Band 6", "Free Range" }, 0));
         layout.add (std::make_unique<APF> (ParameterID { bandID (b, FLo), 1 }, pre + "Detect Low",  freqRange(), bandDefault (FLo, b), fAttr));
         layout.add (std::make_unique<APF> (ParameterID { bandID (b, FHi), 1 }, pre + "Detect High", freqRange(), bandDefault (FHi, b), fAttr));
         layout.add (std::make_unique<APB> (ParameterID { bandID (b, Ext), 1 },      pre + "External Sidechain", false));

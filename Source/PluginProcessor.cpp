@@ -245,15 +245,14 @@ void SilverMBAudioProcessor::processChunk (float* const* io, int nCh, const floa
         const float lo = bandParam (b, Lo), hi = bandParam (b, Hi);
         const int loOrd = slopeToOrder ((int) bandParam (b, LoSlope));
         const int hiOrd = slopeToOrder ((int) bandParam (b, HiSlope));
-        const bool freeDet = bandParam (b, Free) > 0.5f;
-        const float dLo = freeDet ? bandParam (b, FLo) : lo;
-        const float dHi = freeDet ? bandParam (b, FHi) : hi;
+        float dLo, dHi; int dLoOrd, dHiOrd;
+        detectorRange (b, dLo, dHi, dLoOrd, dHiOrd);
         const bool ext = bandParam (b, Ext) > 0.5f && hasSC;
 
         B.aHP.setup (true,  loOrd, lo, sr, loIsOpen (lo));
         B.aLP.setup (false, hiOrd, hi, sr, hiIsOpen (hi));
-        B.dHP.setup (true,  loOrd, dLo, sr, loIsOpen (dLo));
-        B.dLP.setup (false, hiOrd, dHi, sr, hiIsOpen (dHi));
+        B.dHP.setup (true,  dLoOrd, dLo, sr, loIsOpen (dLo));
+        B.dLP.setup (false, dHiOrd, dHi, sr, hiIsOpen (dHi));
         B.loSh.setup (loOrd, lo, sr);
         B.hiSh.setup (hiOrd, hi, sr);
 

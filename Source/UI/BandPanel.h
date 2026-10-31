@@ -68,18 +68,18 @@ private:
     Knob fLo { "DETECT LOW" }, fHi { "DETECT HIGH" };
 
     juce::Slider loFreq, hiFreq;
-    juce::ComboBox loSlope, hiSlope, stMode;
+    juce::ComboBox loSlope, hiSlope, stMode, trigBox;
     juce::TextButton compBtn { "Compress" }, expBtn { "Expand" };
     juce::TextButton solo { "S" }, mute { "M" }, byp { "Bypass" }, del { "X" };
-    juce::TextButton freeBtn { "Free" }, extBtn { "Ext SC" }, audBtn { "Audition" };
-    juce::Label title, loLbl { {}, "Corte inf." }, hiLbl { {}, "Corte sup." }, emptyLbl, expertLbl;
+    juce::TextButton extBtn { "Ext SC" }, audBtn { "Audition" };
+    juce::Label title, loLbl { {}, "Corte inf." }, hiLbl { {}, "Corte sup." }, emptyLbl, expertLbl, trigLbl;
 
     using SA = juce::AudioProcessorValueTreeState::SliderAttachment;
     using BA = juce::AudioProcessorValueTreeState::ButtonAttachment;
     using CA = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
     std::unique_ptr<SA> loAtt, hiAtt;
-    std::unique_ptr<CA> loSAtt, hiSAtt, stAtt;
-    std::unique_ptr<BA> soloAtt, muteAtt, bypAtt, freeAtt, extAtt, audAtt;
+    std::unique_ptr<CA> loSAtt, hiSAtt, stAtt, trigAtt;
+    std::unique_ptr<BA> soloAtt, muteAtt, bypAtt, extAtt, audAtt;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BandPanel)
 };

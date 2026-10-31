@@ -386,6 +386,16 @@ void BandDisplay::showBandMenu (int b)
     m.addItem (4, "Compress", true, bp (b, Mode) < 0.5f);
     m.addItem (5, "Expand",   true, bp (b, Mode) > 0.5f);
     m.addSeparator();
+    {
+        juce::PopupMenu t;
+        const int cur = (int) bp (b, Trig);
+        t.addItem (100, juce::CharPointer_UTF8 ("Pr\xc3\xb3pria banda"), true, cur == 0);
+        for (int i = 0; i < kNumBands; ++i)
+            if (i != b) t.addItem (101 + i, "Banda " + juce::String (i + 1), isActive (i), cur == i + 1);
+        t.addItem (107, "Faixa livre (Expert)", true, cur == 7);
+        m.addSubMenu ("Trigger (sidechain interno)", t);
+        m.addSeparator();
+    }
     m.addItem (6, "Resetar ganho");
     m.addItem (7, "Excluir banda");
 
@@ -405,6 +415,8 @@ void BandDisplay::showBandMenu (int b)
             case 5: d.beginGestureFor (b, Mode); d.setP (b, Mode, 1.0f); break;
             case 6: d.beginGestureFor (b, Gain); d.setP (b, Gain, 0.0f); break;
             case 7: d.endAllGestures(); d.deleteBand (b); return;
+            case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107:
+                d.beginGestureFor (b, Trig); d.setP (b, Trig, (float) (r - 100)); break;
             default: break;
         }
         d.endAllGestures();
@@ -690,6 +702,27 @@ void BandDisplay::paint (juce::Graphics& g)
         }
         g.setColour (Pal::navy.withAlpha (0.35f)); g.strokePath (ps, PathStrokeType (1.2f));
         g.setColour (Pal::navy);                   g.strokePath (pd, PathStrokeType (2.0f));
+    }
+
+    // internal sidechain indicator for the selected band
+    if (selected >= 0 && isActive (selected) && (int) bp (selected, Trig) != 0)
+    {
+        float dLo, dHi; int o1, o2;
+        const int src = proc.detectorRange (selected, dLo, dHi, o1, o2);
+        if (src != selected)
+        {
+            const auto col = src >= 0 ? Pal::band (src) : Pal::navy2;
+            const float x1 = freqToX (dLo), x2 = freqToX (dHi);
+            auto strip = Rectangle<float> (x1, plot.getY() + 3.0f, jmax (4.0f, x2 - x1), 15.0f);
+            g.setColour (col.withAlpha (0.18f));
+            g.fillRect (Rectangle<float> (x1, plot.getY(), jmax (4.0f, x2 - x1), plot.getHeight()));
+            g.setColour (col.withAlpha (0.85f));
+            g.fillRoundedRectangle (strip, 4.0f);
+            g.setColour (Colours::white);
+            g.setFont (FontOptions (10.5f, Font::bold));
+            const String txt = "SC " + String (selected + 1) + String (CharPointer_UTF8 (" \xe2\x86\x90 ")) + (src >= 0 ? "Banda " + String (src + 1) : String ("faixa livre"));
+            g.drawText (txt, strip.withWidth (jmax (strip.getWidth(), 120.0f)), Justification::centred);
+        }
     }
 
     // dots
